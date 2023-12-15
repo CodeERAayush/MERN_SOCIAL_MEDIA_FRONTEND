@@ -56,7 +56,7 @@ const Navbar = () => {
             },
           }}
         >
-          Sociopedia
+          Social ButterFly
         </Typography>
         {isNonMobileScreens && (
           <FlexBetween

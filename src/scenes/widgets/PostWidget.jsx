@@ -3,10 +3,13 @@ import {
   FavoriteBorderOutlined,
   FavoriteOutlined,
   ShareOutlined,
+  Send
 } from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Divider, IconButton, InputBase, TextField, Typography, useTheme } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
+import FlexStart from "components/FlexStart";
 import Friend from "components/Friend";
+import UserImage from "components/UserImage";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,10 +33,55 @@ const PostWidget = ({
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
 
+  const [comment,setComment]=useState('')
+
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
+
+  const sendComment=async ()=>{
+    if(!comment){return;}
+    const response = await fetch(`https://socialmedia-backend-lsuw.onrender.com/posts/${postId}/comment`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: loggedInUserId,text:comment }),
+    });
+    const updatedPost = await response.json();
+    setComment("")
+    dispatch(setPost({ post: updatedPost }));
+  }
+  // const sendComment=async ()=>{
+  //   if(!comment){return;}
+  //   const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
+  //     method: "PATCH",
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ userId: loggedInUserId,text:comment }),
+  //   });
+  //   const updatedPost = await response.json();
+  //   setComment("")
+  //   dispatch(setPost({ post: updatedPost }));
+  // }
+
+
+  // const patchLike = async () => {
+  //   const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
+  //     method: "PATCH",
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ userId: loggedInUserId }),
+  //   });
+  //   const updatedPost = await response.json();
+  //   dispatch(setPost({ post: updatedPost }));
+  // };
   const patchLike = async () => {
     const response = await fetch(`https://socialmedia-backend-lsuw.onrender.com/posts/${postId}/like`, {
       method: "PATCH",
@@ -86,19 +134,34 @@ const PostWidget = ({
             </IconButton>
             <Typography>{comments.length}</Typography>
           </FlexBetween>
+          <FlexBetween>
+            <TextField
+              id="outlined-helperText"
+              label="Add Comment"
+              size="small"
+              onChange={(e) => setComment(e.target.value)}
+              value={comment}
+            />
+           {comment? <Send
+            onClick={()=>sendComment()}
+            sx={{color:primary,marginLeft:1}}
+            />:null}
+          </FlexBetween>
         </FlexBetween>
-
-        <IconButton>
-          <ShareOutlined />
-        </IconButton>
       </FlexBetween>
       {isComments && (
         <Box mt="0.5rem">
           {comments.map((comment, i) => (
             <Box key={`${name}-${i}`}>
-              <Divider />
-              <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem" }}>
-                {comment}
+              <Divider style={{marginTop:'0.3rem'}} />
+              {comment?.userImage?<FlexStart style={{marginTop:'0.3rem'}} >
+              <UserImage image={comment?.userImage} size={'20px'} />
+              <Typography sx={{ color: primary, pl:'0.5rem'}}>
+                {comment?.username?comment?.username:""}
+              </Typography>
+              </FlexStart>:null}
+              <Typography sx={{ color: main, pl: "2rem" }}>
+                {comment?.text?comment?.text:comment}
               </Typography>
             </Box>
           ))}
